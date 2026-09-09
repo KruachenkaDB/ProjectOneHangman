@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
-    public static boolean isGame;
+    private static boolean isGame;
 
     public static final String START = "старт";
     public static final String EXIT = "выход";
@@ -13,35 +13,34 @@ public class Main {
     public static final String GAME_OVER = "Поражение";
     public static final String PATH = "words.txt";
 
-    public static String word;
-    public static String letter;
-    public static String wordStars;
+    private static String word;
+    private static String maskedWord;
 
-    public static int mistakeCount = 0;
+    private static int mistakeCount = 0;
 
-    public static String[] lines = new String[7];
+    private static final String[] lines = new String[7];
 
-    static ArrayList<Character> letters = new ArrayList<>();
+    private static ArrayList<Character> letters = new ArrayList<>();
 
     public static void main(String[] args) {
         startGame();
     }
 
     public static void startGame() {
-        mistakeCount = 5;
-        letters.clear();
-
-        System.out.println("Хотите начать новую игру или выйти из приложения? (Введите 'старт' или 'выход')");
-        Scanner scanner = new Scanner(System.in);
-        String string = scanner.nextLine();
-        if (string.equals(START)) {
         isGame = true;
-        issuedWord();
-        newGame();
-        } else if (string.equals(EXIT)) {
-            isGame = false;
+        while (isGame) {
+            System.out.println("Хотите начать новую игру или выйти из приложения? (Введите 'старт' или 'выход')");
+            Scanner scanner = new Scanner(System.in);
+            String string = scanner.nextLine();
+            if (string.equals(START)) {
+                mistakeCount = 5;
+                letters.clear();
+                issuedWord();
+                newGame();
+            } else if (string.equals(EXIT)) {
+                isGame = false;
+            }
         }
-
     }
 
     public static void issuedWord() {
@@ -59,7 +58,7 @@ public class Main {
                 return;
             }
 
-            if (wordStars.equals(word)) {
+            if (maskedWord.equals(word)) {
                 setVictory();
                 return;
             }
@@ -67,7 +66,12 @@ public class Main {
             System.out.println();
             System.out.print("Введите букву: ");
             Scanner scanner = new Scanner(System.in);
-            letter = scanner.nextLine();
+            String letter = scanner.nextLine();
+
+            if ((letter.equals(word) && mistakeCount >= 1)) {
+                setVictory();
+                return;
+            }
 
             if (letter.isEmpty()) {
                 System.out.println("Похоже вы ввели пустую строку, введите букву");
@@ -82,36 +86,30 @@ public class Main {
 
             if (letter.length() > 1) {
                 System.out.println("Было загадано не это слово, либо пишите по одной букве");
-                minusStarInWord(letter);
                 drawHangman();
                 continue;
             }
 
             if (letters.contains(charLetter)) {
                 System.out.println("Эту букву вы уже вводили");
-                minusStarInWord(letter);
+                openLetterInWord(letter);
                 drawHangman();
                 continue;
             }
 
             letters.add(charLetter);
 
-            if ((splitWordInChar(letter)) && mistakeCount >= 1) {
+            if ((isLetterInWord(letter)) && mistakeCount >= 1) {
                 System.out.println("Вы угадали букву");
-                minusStarInWord(letter);
+                openLetterInWord(letter);
                 drawHangman();
                 continue;
             }
 
-            if ((letter.equals(word) && mistakeCount >= 1)) {
-                setVictory();
-            }
-
-            minusStarInWord(letter);
+            openLetterInWord(letter);
             mistakeCount -= 1;
             System.out.println("Такой буквы в слове нет");
             drawHangman();
-
         }
     }
 
@@ -159,27 +157,27 @@ public class Main {
         for (int i = 0; i < word.length(); i++) {
             charsWordStars[i] = '*';
         }
-        wordStars = String.valueOf(charsWordStars);
-        return wordStars;
+        maskedWord = String.valueOf(charsWordStars);
+        return maskedWord;
     }
 
-    public static void minusStarInWord(String letter) {
+    public static void openLetterInWord(String letter) {
         if (letter == null || letter.isEmpty()) {
             return;
         }
         char charLetter = letter.charAt(0);
         char[] charsWord = word.toCharArray();
-        char[] charsWordStars = wordStars.toCharArray();
+        char[] charsWordStars = maskedWord.toCharArray();
         for (int i = 0; i < word.length(); i++) {
             if ((charsWordStars[i] != charLetter) && (charsWord[i] == charLetter)) {
                 charsWordStars[i] = charLetter;
             }
         }
-        wordStars = String.valueOf(charsWordStars);
-        System.out.println(wordStars);
+        maskedWord = String.valueOf(charsWordStars);
+        System.out.println(maskedWord);
     }
 
-    public static boolean splitWordInChar(String letter) {
+    public static boolean isLetterInWord(String letter) {
         try {
             char charLetter = letter.charAt(0);
             char[] charsWord = word.toCharArray();
@@ -195,7 +193,6 @@ public class Main {
     }
 
     public static void setVictory() {
-        isGame = false;
         System.out.println();
         System.out.println(VICTORY);
         System.out.println();
