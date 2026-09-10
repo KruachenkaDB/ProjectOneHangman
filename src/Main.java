@@ -13,31 +13,35 @@ public class Main {
     public static final String GAME_OVER = "Поражение";
     public static final String PATH = "words.txt";
 
+    private static final Scanner scanner = new Scanner(System.in);
+
     private static String word;
     private static String maskedWord;
 
     private static int mistakeCount = 0;
 
     private static final String[] lines = new String[7];
+    private static String[] words;
 
     private static ArrayList<Character> letters = new ArrayList<>();
 
     public static void main(String[] args) {
-        startGame();
+        if (loadWords()) {
+            startGame();
+        }
     }
 
     public static void startGame() {
         isGame = true;
         while (isGame) {
             System.out.println("Хотите начать новую игру или выйти из приложения? (Введите 'старт' или 'выход')");
-            Scanner scanner = new Scanner(System.in);
             String string = scanner.nextLine();
-            if (string.equals(START)) {
+            if (string.equalsIgnoreCase(START)) {
                 mistakeCount = 5;
                 letters.clear();
                 issuedWord();
                 newGame();
-            } else if (string.equals(EXIT)) {
+            } else if (string.equalsIgnoreCase(EXIT)) {
                 isGame = false;
             }
         }
@@ -65,7 +69,6 @@ public class Main {
 
             System.out.println();
             System.out.print("Введите букву: ");
-            Scanner scanner = new Scanner(System.in);
             String letter = scanner.nextLine();
 
             if ((letter.equals(word) && mistakeCount >= 1)) {
@@ -92,21 +95,21 @@ public class Main {
 
             if (letters.contains(charLetter)) {
                 System.out.println("Эту букву вы уже вводили");
-                openLetterInWord(letter);
+                openLetterInWord(charLetter);
                 drawHangman();
                 continue;
             }
 
             letters.add(charLetter);
 
-            if ((isLetterInWord(letter)) && mistakeCount >= 1) {
+            if ((isLetterInWord(charLetter)) && mistakeCount >= 1) {
                 System.out.println("Вы угадали букву");
-                openLetterInWord(letter);
+                openLetterInWord(charLetter);
                 drawHangman();
                 continue;
             }
 
-            openLetterInWord(letter);
+            openLetterInWord(charLetter);
             mistakeCount -= 1;
             System.out.println("Такой буквы в слове нет");
             drawHangman();
@@ -161,11 +164,7 @@ public class Main {
         return maskedWord;
     }
 
-    public static void openLetterInWord(String letter) {
-        if (letter == null || letter.isEmpty()) {
-            return;
-        }
-        char charLetter = letter.charAt(0);
+    public static void openLetterInWord(char charLetter) {
         char[] charsWord = word.toCharArray();
         char[] charsWordStars = maskedWord.toCharArray();
         for (int i = 0; i < word.length(); i++) {
@@ -177,17 +176,12 @@ public class Main {
         System.out.println(maskedWord);
     }
 
-    public static boolean isLetterInWord(String letter) {
-        try {
-            char charLetter = letter.charAt(0);
-            char[] charsWord = word.toCharArray();
-            for (int i = 0; i < word.length(); i++) {
-                if (charsWord[i] == charLetter) {
-                    return true;
-                }
+    public static boolean isLetterInWord(char charLetter) {
+        char[] charsWord = word.toCharArray();
+        for (int i = 0; i < word.length(); i++) {
+            if (charsWord[i] == charLetter) {
+                return true;
             }
-        } catch (Exception e) {
-
         }
         return false;
     }
@@ -199,18 +193,25 @@ public class Main {
     }
 
     public static void randomWord() {
+        Random random = new Random();
+        int index = random.nextInt(words.length);
+        word = words[index];
+    }
+
+    public static boolean loadWords() {
         try {
-            String[] words = Files.readAllLines(Path.of(PATH)).toArray(new String[0]);
+            words = Files.readAllLines(Path.of(PATH)).toArray(new String[0]);
 
             if (words.length == 0) {
                 System.out.println("Файл пуст!");
-                return;
+                return false;
             }
-            Random random = new Random();
-            int index = random.nextInt(words.length);
-            word = words[index];
+
+            return true;
+
         } catch (Exception e) {
             System.out.println("Ошибка чтения файла");
+            return false;
         }
     }
 
